@@ -1,11 +1,11 @@
-"chromosome.view" <-
+"chromosome.viewsequence" <-
 function(x, chrom, statistic="lod", 
                             pheno.names=NULL, 
-                            min.lod=0, max.lod=4, 
+                            min.stat=0, max.stat=4, 
                             col=1:6, lwd=2, lty=1, 
                             hpos=0.85, width=0.05, 
                             chromname.cex=1.5,   
-                            units="cM", bands="major", 
+                            units="bp", bands="major", xticdist=5e7,
                             show.y.axis=FALSE, new=FALSE, ...) {
 # chromosome
   require(grid)
@@ -23,65 +23,67 @@ function(x, chrom, statistic="lod",
   n<-nrow(chromdata)
   centromere<-which(chromdata$arm[-n]!=chromdata$arm[-1])
   idx<-c(2:(centromere-1), (centromere+2):(n-1))
-  pushViewport(viewport(xscale=c(chromdata$cM.top[1]-5,chromdata$cM.bot[n]+5), 
+  pushViewport(viewport(xscale=c(chromdata$bases.top[1]-5,chromdata$bases.bot[n]+5), 
                         yscale=c(0,1),
                         clip="on"))
-  grid.rect(x=chromdata$cM.top[idx],y=hpos,
-            width=chromdata$cM.bot[idx]-chromdata$cM.top[idx],
+  grid.rect(x=chromdata$bases.top[idx],y=hpos,
+            width=chromdata$bases.bot[idx]-chromdata$bases.top[idx],
             height=width,
             just=c("left","top"),
             default.units="native", gp=gpar(fill=bandcol[idx]))
-  grid.semicircle(chromdata$cM.bot[1], hpos-width, width,
-                  chromdata$cM.bot[1]-chromdata$cM.top[1], 2, col=bandcol[1])
-  grid.semicircle(chromdata$cM.top[n], hpos-width, width, 
-                  chromdata$cM.bot[n]-chromdata$cM.top[n], 4, col=bandcol[n])
-  grid.semicircle(chromdata$cM.top[centromere], hpos-width, width,
-                  chromdata$cM.bot[centromere]-chromdata$cM.top[centromere], 
+  grid.semicircle(chromdata$bases.bot[1], hpos-width, width,
+                  chromdata$bases.bot[1]-chromdata$bases.top[1], 2, col=bandcol[1])
+  grid.semicircle(chromdata$bases.top[n], hpos-width, width, 
+                  chromdata$bases.bot[n]-chromdata$bases.top[n], 4, col=bandcol[n])
+  grid.semicircle(chromdata$bases.top[centromere], hpos-width, width,
+                  chromdata$bases.bot[centromere]-chromdata$bases.top[centromere], 
                   4, col=bandcol[centromere])
-  grid.semicircle(chromdata$cM.bot[centromere+1], hpos-width, width, 
-                  chromdata$cM.bot[centromere+1]-chromdata$cM.top[centromere+1], 
+  grid.semicircle(chromdata$bases.bot[centromere+1], hpos-width, width, 
+                  chromdata$bases.bot[centromere+1]-chromdata$bases.top[centromere+1], 
                   2, col=bandcol[centromere+1])
-  grid.points(unit(chromdata$cM.bot[centromere],"native"), 
+  grid.points(unit(chromdata$bases.bot[centromere],"native"), 
               unit(hpos-0.5*width,"native"),
               size=unit(1.5,"char"), pch=20, gp=gpar(col="white"))
-  grid.points(unit(chromdata$cM.bot[centromere],"native"), 
+  grid.points(unit(chromdata$bases.bot[centromere],"native"), 
               unit(hpos-0.5*width,"native"),
               size=unit(0.5,"char"), pch=20, gp=gpar(col="black"))
   grid.text(chrom,
             unit(0.5,"npc"),
             unit(hpos+2*width,"native"), gp=gpar(cex=chromname.cex))
-# lod curve
+# stat curve
   pos<-x$pos[x$chr %in% chrom]
-  lod<-x[x$chr %in% chrom, statistic]
-  hi.lod<-max(unlist(c(max.lod,lod)),na.rm=TRUE)
+  stat<-x[x$chr %in% chrom, statistic]
+  hi.stat<-max(unlist(c(max.stat,stat)),na.rm=TRUE)
   if (sum(x$chr %in% chrom)>0) {
     pushViewport(viewport(x=unit(0,"native") ,y=unit(1,"lines"),
                           width=unit(max(pos, na.rm=TRUE),"native"),
                           height=unit(0.95, "npc"),
                           just=c("left","bottom"), 
                           xscale=c(0,max(pos,na.rm=TRUE)), 
-                          yscale=c(min.lod,hi.lod),
+                          yscale=c(min.stat,hi.stat),
                           clip="off"))
     grid.rect()
-    if (is.vector(lod)) {
-      grid.lines(pos, lod, default.units="native", 
+    if (is.vector(stat)) {
+      grid.lines(pos, stat, default.units="native", 
       gp=gpar(col=col, lwd=lwd, lty=lty, ...))
     }else{
-      if (length(col)<ncol(lod)) {
-        col <- rep(col, length.out = ncol(lod))
+      if (length(col)<ncol(stat)) {
+        col <- rep(col, length.out = ncol(stat))
       }
-      if (length(lty)<ncol(lod)) {
-        lty <- rep(lty, length.out = ncol(lod))
+      if (length(lty)<ncol(stat)) {
+        lty <- rep(lty, length.out = ncol(stat))
       }
-      for(j in 1:ncol(lod)) {
-        grid.lines(pos,lod[,j], default.units="native", 
+      for(j in 1:ncol(stat)) {
+        grid.lines(pos,stat[,j], default.units="native", 
         gp=gpar(col=col[j], lwd=lwd, lty=lty[j], ...))
       }
     }
-    my.xtics(at=seq(0,max(pos,na.rm=TRUE),50),length=0.25)
-    grid.grill(h=0:3, v=0, default.units="native",gp=gpar(lty=3))
+    yticks <- seq(min.stat, max.stat,1)
+    my.xtics(at=seq(0,max(pos,na.rm=TRUE),xticdist),length=0.25)
+    grid.grill(h=yticks, v=0, 
+               default.units="native",gp=gpar(lty=3))
     if (show.y.axis || new) {
-      grid.text(0:3,
+      grid.text(yticks,
               unit(rep(0.0,4),"npc")-unit(rep(0.5,4),"lines"),
               unit(0:3,"native"), gp=gpar(cex=0.75))
     }

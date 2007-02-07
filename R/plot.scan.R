@@ -1,7 +1,7 @@
 "plot.scan" <-
 function(x, type="layout", statistic="lod", 
-                      with.X=TRUE, min.lod=0, max.lod=4, pheno.names=NULL,
-                      units="cM", col=1:6, lty=1, lwd=2, 
+                      with.X=TRUE, min.stat=0, max.stat=4, pheno.names=NULL,
+                      units="cM", col=1:6, lty=1, lwd=2,
                       chromname.cex=0.9, ...) {
   require(grid)
   if (with.X) {
@@ -43,19 +43,35 @@ function(x, type="layout", statistic="lod",
     i.chr <- 0
     for(g in seq(along=chr.plot)) {
       pushViewport(chr.plot[[g]])
-      for(i in 1:nchrom[g]) {
-        i.chr <- i.chr + 1
-        pushViewport(viewport(layout.pos.col=i, layout.pos.row=1))
-        chromosome.view(x,chroms[i.chr],statistic,col=col, lwd=lwd, lty=lty, 
-                        chromname.cex=chromname.cex, show.y.axis=(i==1))
-        popViewport()
+      if (units=="bp") {
+        for(i in 1:nchrom[g]) {
+          i.chr <- i.chr + 1
+          pushViewport(viewport(layout.pos.col=i, layout.pos.row=1))
+          chromosome.viewsequence(x,chroms[i.chr], statistic,col=col, 
+                                  min.stat=min.stat, max.stat=max.stat, 
+                                  lwd=lwd, lty=lty, 
+                                  chromname.cex=chromname.cex, 
+                                  show.y.axis=(i==1))
+          popViewport()
+        }
+      }else{
+        for(i in 1:nchrom[g]) {
+          i.chr <- i.chr + 1
+          pushViewport(viewport(layout.pos.col=i, layout.pos.row=1))
+          chromosome.viewlinkage(x,chroms[i.chr],statistic,col=col, 
+                                 min.stat=min.stat, max.stat=max.stat, 
+                                 lwd=lwd, lty=lty, 
+                                 chromname.cex=chromname.cex, 
+                                 show.y.axis=(i==1))
+          popViewport()
+        }
       }
       popViewport()
     }
   }else if (type=="linear") {
     n.chrom<-length(unique(x$chr))
-    lod<-x[, statistic]
-    hi.lod<-max(unlist(c(max.lod,lod)),na.rm=TRUE)
+    statlod<-x[, statistic]
+    hi.lod<-max(unlist(c(max.stat,lod)),na.rm=TRUE)
     pos<-x$pos
     d<-diff(pos)
     d[d<0]<-0
@@ -80,13 +96,13 @@ function(x, type="layout", statistic="lod",
     if (is.null(ncol(lod))) {
       npheno<-1
       plot(pos, lod, t="l",
-           ylim=c(min.lod,hi.lod), axes=FALSE,
+           ylim=c(min.stat,hi.lod), axes=FALSE,
            xlab=paste("Genome scan position (",units,")",sep=""), 
            ylab="lod score", ...)
     }else{
       npheno <- ncol(lod)
       matplot(pos, lod, t="l",
-           ylim=c(min.lod,hi.lod), axes=FALSE,
+           ylim=c(min.stat,hi.lod), axes=FALSE,
            col=col, lwd=lwd, 
            xlab=paste("Genome scan position (",units,")",sep=""), 
            ylab="lod score", ...)
@@ -103,7 +119,7 @@ function(x, type="layout", statistic="lod",
     abline(h=3, lty=3)
     abline(h=0, lty=3)
     if (npheno>1) {
-      legend(0, max.lod+0.1, lwd=rep(2,npheno), 
+      legend(0, max.stat+0.1, lwd=rep(2,npheno), 
              bty="o",  bg="white", 
              col=c("black","red", "blue"),
              legend=pheno.names, horiz=TRUE)
@@ -113,10 +129,10 @@ function(x, type="layout", statistic="lod",
          main="Distribution of lod scores across scan", ...)
   }else{
     lod<-x[, statistic[1]]
-    hi.lod<-max(unlist(c(max.lod,lod)),na.rm=TRUE)
+    hi.lod<-max(unlist(c(max.stat,lod)),na.rm=TRUE)
     idx<-as.numeric(as.character(x$chr))==1
     plot(x$pos[idx], lod[idx], t="l",
-         ylim=c(min.lod,hi.lod), 
+         ylim=c(min.stat,hi.lod), 
          xlab=paste("Map position (i",units,")",sep=""), ylab="lod score", ...)
     for (i in unique(x$chr)) {
       lty<-1

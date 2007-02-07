@@ -9,7 +9,7 @@ ideogram if appropriate.
 }
 \usage{
 plot.scan(x, type = "layout", statistic = "lod", with.X = TRUE, 
-  min.lod = 0, max.lod = 4, pheno.names = NULL, units = "cM", 
+  min.stat = 0, max.stat = 4, pheno.names = NULL, units = "cM", 
   col = 1:6, lty = 1, lwd = 2, chromname.cex=0.9, ...)
 }
 \arguments{
@@ -20,8 +20,8 @@ statistics to be plotted.}
   "histogram", defaulting to "layout".}
   \item{statistic}{is the test statistic to be plotted, defaulting to "lod".}
   \item{with.X}{flags whether the X chromosome is to be included in the plot.}
-  \item{min.lod}{is the minimum plottable value of the statistic.}
-  \item{max.lod}{is the maximum plottable value of the statistic.}
+  \item{min.stat}{is the minimum plottable value of the statistic.}
+  \item{max.stat}{is the maximum plottable value of the statistic.}
   \item{pheno.names}{gives a long name for the statistics, defaulting to 
 the statistic name.}
   \item{units}{are the map units, defaulting to "cM".}
